@@ -272,7 +272,7 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
-            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT and score.value >= 100: # 左シフトとスコア100以上のとき
+            if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT and score.value >= 100: # 右シフトとスコア100以上のとき
                 score.value -= 100 # スコアを-100
                 bird.state = "hyper" # stateを無敵状態に
                 bird.hyper_life = 500 # 無敵状態の発動時間
