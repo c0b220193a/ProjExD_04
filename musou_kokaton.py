@@ -234,7 +234,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 51
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -242,6 +242,23 @@ class Score:
     def update(self, screen: pg.Surface):
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
+###########################################################################
+class Shield(pg.sprite.Sprite):
+    def init(self, bird: Bird, life: int):
+        super().init()
+        self.image = pg.Surface((20, bird.rect.height * 2))  # 青い矩形を生成
+        self.image.fill((0, 0, 255))  # 青で塗りつぶす
+        self.rect = self.image.get_rect()
+        self.rect.center = (bird.rect.centerx + bird.rect.width / 2 + 10, bird.rect.centery)  # こうかとんの前に配置
+        self.life = life  # 発動時間
+
+    def update(self):
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+
+
+
 
 
 def main():
@@ -255,9 +272,11 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    shields = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
+    tmr5 = 500
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -265,6 +284,11 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_CAPSLOCK and score.value > 50 and len(shields) == 0:
+                shields.add(Shield(bird, 400))
+                score.value -= 50
+                
+
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -290,6 +314,14 @@ def main():
             pg.display.update()
             time.sleep(2)
             return
+        
+        for bomb in pg.sprite.groupcollide(bombs, shields, True, False).keys():
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            score.value += 1  # 1点アップ
+
+        for emy in pg.sprite.groupcollide(emys, shields, True, False).keys():
+            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            score.value += 10  # 10点アップ
 
         bird.update(key_lst, screen)
         beams.update()
@@ -303,6 +335,7 @@ def main():
         score.update(screen)
         pg.display.update()
         tmr += 1
+        tmr5 += 1
         clock.tick(50)
 
 
