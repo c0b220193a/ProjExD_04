@@ -6,8 +6,8 @@ import time
 import pygame as pg
 
 
-WIDTH = 1600  # ゲームウィンドウの幅
-HEIGHT = 900  # ゲームウィンドウの高さ
+WIDTH = 1000  # ゲームウィンドウの幅
+HEIGHT = 600  # ゲームウィンドウの高さ
 MAIN_DIR = os.path.split(os.path.abspath(__file__))[0]
 
 
@@ -213,6 +213,7 @@ class Enemy(pg.sprite.Sprite):
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
 
+
     def update(self):
         """
         敵機を速度ベクトルself.vyに基づき移動（降下）させる
@@ -244,6 +245,28 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class EMP(pg.sprite.Sprite):
+    def __init__(self, enemy_group, bomb_group, screen):
+        super().__init__()
+        self.enemy_group = enemy_group
+        self.bomb_group = bomb_group
+        self.screen = screen
+
+    def disable_enemy(self, enemy):
+        #enemy.kill()
+        enemy.interval = float("inf")
+        enemy.image = pg.transform.laplacian(enemy.image)
+        enemy.image.set_colorkey((0, 0, 0))
+        
+
+    def disable_bomb(self, bomb):
+        bomb.speed /= 2
+        bomb.state = "inactive"
+    
+
+
+
+
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -258,6 +281,7 @@ def main():
 
     tmr = 0
     clock = pg.time.Clock()
+    emp = EMP(emys, bombs, screen)
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -265,6 +289,14 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_e and score.value > 20:
+                score.value -= 20
+                for emy in emys:
+                    for bom in bombs:
+                        emp.disable_enemy(emy)
+                        emp.disable_bomb(bom)
+                    
+
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -304,6 +336,7 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
 
 
 if __name__ == "__main__":
