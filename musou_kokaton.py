@@ -243,6 +243,24 @@ class Score:
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+class Gravity(pg.sprite.Sprite):
+    """
+    重力場の発生させるクラス
+    """
+    def __init__(self, life: int ):
+        super().__init__()
+        self.life = life
+        self.image = pg.Surface((WIDTH,HEIGHT))
+        pg.draw.rect(self.image,(0, 0, 0),(0, 0, 1600, 900))
+        self.image.set_alpha(100)
+        self.rect = self.image.get_rect()
+    
+    def update(self):
+        self.life -= 1
+        if self.life < 0:
+            self.kill()
+
+
 
 def main():
     pg.display.set_caption("真！こうかとん無双")
@@ -255,16 +273,32 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    gravity = pg.sprite.Group()
 
     tmr = 0
+    tmr2 = 0
     clock = pg.time.Clock()
     while True:
+        
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value > 200:
+                score.value -= 200
+                gravity.add(Gravity(life=400))
+        for emy in pg.sprite.groupcollide(emys, gravity, True, False).keys():
+            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            score.value +=10
+        for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            score.value +=10
+        
+        
+
+
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -300,9 +334,15 @@ def main():
         bombs.draw(screen)
         exps.update()
         exps.draw(screen)
+
+        gravity.update()
+        gravity.draw(screen)
+
+
         score.update(screen)
         pg.display.update()
         tmr += 1
+        tmr2 += 1
         clock.tick(50)
 
 
