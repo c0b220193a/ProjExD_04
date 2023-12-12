@@ -6,8 +6,8 @@ import time
 import pygame as pg
 
 
-WIDTH = 1000  # ゲームウィンドウの幅
-HEIGHT = 600  # ゲームウィンドウの高さ
+WIDTH = 1600  # ゲームウィンドウの幅
+HEIGHT = 900  # ゲームウィンドウの高さ
 MAIN_DIR = os.path.split(os.path.abspath(__file__))[0]
 
 
@@ -297,7 +297,6 @@ class EMP(pg.sprite.Sprite):
         self.screen = screen
 
     def disable_enemy(self, enemy):
-        #enemy.kill()
         enemy.interval = float("inf")
         enemy.image = pg.transform.laplacian(enemy.image)
         enemy.image.set_colorkey((0, 0, 0))
@@ -324,7 +323,7 @@ def main():
     emys = pg.sprite.Group()
     gravity = pg.sprite.Group()
 
-    tmr = 
+    tmr = 0
     clock = pg.time.Clock()
     emp = EMP(emys, bombs, screen)
     while True:
@@ -334,7 +333,16 @@ def main():
             if event.type == pg.QUIT:
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                beams.add(Beam(bird))
+                if key_lst[pg.K_LSHIFT]:
+                    beams.add(NeoBeam(bird, 5).gen_beams())  #ビームの数
+                else:
+                    beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_e and score.value > 20:
+                score.value -= 20
+                for emy in emys:
+                    emp.disable_enemy(emy)
+                for bom in bombs:
+                    emp.disable_bomb(bom)
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT and score.value >= 100: # 右シフトとスコア100以上のとき
                 score.value -= 100 # スコアを-100
                 bird.state = "hyper" # stateを無敵状態に
@@ -349,22 +357,8 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value +=1
-        
-        
-
-
-            if event.type == pg.KEYDOWN and event.key == pg.K_e and score.value > 20:
-                score.value -= 20
-                for emy in emys:
-                　　emp.disable_enemy(emy)
-                for bom in bombs:
-                　　emp.disable_bomb(bom)
                     
 
-                if key_lst[pg.K_LSHIFT]:
-                    beams.add(NeoBeam(bird, 3).gen_beams())
-                else:
-                    beams.add(Beam(bird))
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -412,7 +406,6 @@ def main():
         score.update(screen)
         pg.display.update()
         tmr += 1
-        tmr2 += 1
         clock.tick(50)
 
 
